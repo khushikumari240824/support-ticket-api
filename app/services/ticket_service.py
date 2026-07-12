@@ -14,10 +14,10 @@ def create_ticket(db: Session, data: TicketCreateStandalone) -> Ticket:
         if queue.current_ticket_count + data.quantity > queue.capacity:
             raise ValueError("capacity_exceeded")
         if (
-    settings.MAX_TICKETS_PER_QUEUE is not None
-    and queue.current_ticket_count + data.quantity > settings.MAX_TICKETS_PER_QUEUE
-):
-           raise ValueError("capacity_exceeded")
+            settings.MAX_TICKETS_PER_QUEUE is not None
+            and queue.current_ticket_count + data.quantity > settings.MAX_TICKETS_PER_QUEUE
+        ):
+            raise ValueError("capacity_exceeded")
         
         ticket = Ticket(
             title=data.title,
@@ -48,9 +48,9 @@ def add_ticket_to_queue(db: Session, queue_id: str, data: TicketCreate) -> Ticke
     if queue.current_ticket_count + data.quantity > queue.capacity:
         raise ValueError("capacity_exceeded")
     if (
-    settings.MAX_TICKETS_PER_QUEUE is not None
-    and queue.current_ticket_count + data.quantity > settings.MAX_TICKETS_PER_QUEUE
-):
+        settings.MAX_TICKETS_PER_QUEUE is not None
+        and queue.current_ticket_count + data.quantity > settings.MAX_TICKETS_PER_QUEUE
+    ):
         raise ValueError("capacity_exceeded")
     ticket = Ticket(
         title=data.title,
@@ -69,15 +69,28 @@ def bulk_add_tickets(db: Session, queue_id: str, entries: list[TicketBulkEntry])
     queue = db.query(Queue).filter(Queue.id == queue_id).first()
     if not queue:
         raise ValueError("queue_not_found")
+    total_quantity = sum(e.quantity for e in entries if e.quantity > 0)
+    if queue.current_ticket_count + total_quantity > queue.capacity:
+        raise ValueError("capacity_exceeded")
+    if (
+        settings.MAX_TICKETS_PER_QUEUE is not None
+        and queue.current_ticket_count + total_quantity > settings.MAX_TICKETS_PER_QUEUE
+    ):
+        raise ValueError("capacity_exceeded")
     added = 0
     for e in entries:
         if e.quantity <= 0:
             continue
-        ticket = Ticket(title=e.title, complexity=e.complexity, queue_id=queue_id, quantity=e.quantity)
+        ticket = Ticket(
+            title=e.title,
+            complexity=e.complexity,
+            queue_id=queue_id,
+            quantity=e.quantity,
+        )
         db.add(ticket)
+        queue.current_ticket_count += e.quantity
         added += 1
-        db.commit()
-        time.sleep(0.05)  # demo: widens race window vs resolve
+    db.commit()
     return added
 
 
