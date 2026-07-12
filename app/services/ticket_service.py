@@ -7,6 +7,8 @@ from app.schemas import TicketBulkEntry, TicketCreate, TicketCreateStandalone
 
 
 def create_ticket(db: Session, data: TicketCreateStandalone) -> Ticket:
+    
+    
     if data.queue_id:
         queue = db.query(Queue).filter(Queue.id == data.queue_id).first()
         if not queue:
@@ -43,6 +45,7 @@ def create_ticket(db: Session, data: TicketCreateStandalone) -> Ticket:
 
 def add_ticket_to_queue(db: Session, queue_id: str, data: TicketCreate) -> Ticket:
     queue = db.query(Queue).filter(Queue.id == queue_id).first()
+  
     if not queue:
         raise ValueError("queue_not_found")
     if queue.current_ticket_count + data.quantity > queue.capacity:
