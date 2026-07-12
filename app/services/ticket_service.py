@@ -109,9 +109,7 @@ def update_ticket_complexity(db: Session, ticket_id: str, complexity: int) -> No
     ticket = get_ticket_by_id(db, ticket_id)
     if not ticket:
         raise ValueError("ticket_not_found")
-    if complexity < 0:
-        raise ValueError("invalid_complexity")
-        
+
     ticket.complexity = complexity
     db.commit()
 
