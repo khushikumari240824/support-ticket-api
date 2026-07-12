@@ -27,7 +27,7 @@ def resolve_ticket(data: ResolveRequest, db: Session = Depends(get_db)):
                 status_code=400,
                 detail=OutOfStockError().model_dump(),
             )
-        if str(e) == "insufficient_effort":
+        if e.args and e.args[0] == "insufficient_effort":
             required, logged = e.args[1], e.args[2]
             raise HTTPException(
                 status_code=400,
