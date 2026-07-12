@@ -13,8 +13,11 @@ def create_ticket(db: Session, data: TicketCreateStandalone) -> Ticket:
             raise ValueError("queue_not_found")
         if queue.current_ticket_count + data.quantity > queue.capacity:
             raise ValueError("capacity_exceeded")
-        if queue.current_ticket_count + data.quantity < settings.MAX_TICKETS_PER_QUEUE:
-            raise ValueError("capacity_exceeded")
+        if (
+    settings.MAX_TICKETS_PER_QUEUE is not None
+    and queue.current_ticket_count + data.quantity > settings.MAX_TICKETS_PER_QUEUE
+):
+           raise ValueError("capacity_exceeded")
         
         ticket = Ticket(
             title=data.title,
